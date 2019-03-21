@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Mar 21 11:24:26 2019
+
+@author: jean-baptiste
+"""
+
+# On va estimer a priori mu selon Q
+#c est de dimension 24, il représente l'espérance du cout, la coordonnée i est le cout au mois i. 
+#On rentre à la main des valeurs de c pour coller au modèle. 
+#On a comme paramètre une loi normale N(c,S)
+#Au début, on va considérer S comme tridiagonale (une dépendance d'un mois à l'autre)
+# S est R^24x24
+
+
+#On a de l'autre coté des observations sur k mois, des échantillons x_1, ... x_k. 
+#On veut construire mu qui équilibre entre "coller aux échantillons" et "coller à la prédiction". 
+
+#On veut avoir une prédiction selon N(mu,R)
+
+#Mathématiquement, cela revient à jouer sur les paramètres R et S. 
+# On doit trouver mu qui minimise ps(Xk-Uk,Rk^-1 (Xk-Uk)) + ps(mu-c,S^-1 (mu - c))
+
+import matplotlib.pyplot as plt 
+import numpy as np
+from scipy.optimize import minimize, rosen, rosen_der
+
+dim=24
+
+C=[-(x-(dim//2))**2+(dim//2)**2 for x in range(dim)]
+
+plt.plot(range(dim),C)
+
+def tridiag(n,s1,s2):
+    return np.array([[s1*(abs(i-j)==0)+s2*(abs(i-j)==1) for j in range(n)] for i in range(n)])
+s1=1
+s2=2
+S=tridiag(dim,s1,s2)
+
+
+def ps(n,a,b):
+    assert(len(a)>=n and len(b)>=n)
+    res=0
+    for k in range(n):
+        res+=a[k]*b[k]
+    return res
+
+k=3
+X=np.array([20,30,40])
+R=tridiag(k,s1,s2)
+
+plt.plot(range(k),X)
+
+def to_minimize_vector(mu_v):
+    res=[]
+    for mu in mu_v:
+        res.append( ps(k,X-mu[:k],np.dot(np.linalg.inv(R),X-mu[:k])) + ps(dim,mu-C,np.dot(np.linalg.inv(S),mu - C)))
+    return np.array(res)
+    
+def to_minimize(mu):
+    return ps(k,X-mu[:k],np.dot(np.linalg.inv(R),X-mu[:k])) + ps(dim,mu-C,np.dot(np.linalg.inv(S),mu - C))
+
+
+#Alors ici on va essayer de représenter minimize, donc estimer une dimension 24 en une dimension 1. 
+
+# a chaque i dans abscisses on va représenter un vecteur de dimension 24 qui est a peu près représentatif.
+# on commence par le vecteur [i,...,i]
+
+abscisses_1=np.array([i for i in range(1000)])
+
+abscisses_dim_1=np.array([[i-200 for j in range(dim)] for i in abscisses_1])
+abscisses_dim_2=np.array([[j-dim//2 + i - 500 for j in range(dim)] for i in abscisses_1])
+
+
+#plt.plot(abscisses_1,to_minimize_vector(abscisses_dim_1))
+#plt.plot(abscisses_1,to_minimize_vector(abscisses_dim_2))
+
+
+res=minimize(to_minimize,np.array([50 for i in range(dim)]), method='SLSQP')
+print(res.x)
+plt.plot(range(24),res.x)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
