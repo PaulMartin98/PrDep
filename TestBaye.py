@@ -27,10 +27,14 @@ import numpy as np
 from scipy.optimize import minimize, rosen, rosen_der
 
 
-
+# Creating a triadiag matrix:
 def tridiag(n,s1,s2):
     return np.array([[s1*(abs(i-j)==0)+s2*(abs(i-j)==1) for j in range(n)] for i in range(n)])
 
+def tridiag_2(n,s1,s2):
+    return s1*np.eye(n)+s2*np.eye(n,k=1)+s2*np.eye(n,k=-1)
+
+# Doing the scalar product of the n first components of two vectors:
 def ps(n,a,b):
     assert(len(a)>=n and len(b)>=n)
     res=0
@@ -38,6 +42,7 @@ def ps(n,a,b):
         res+=a[k]*b[k]
     return res
 
+# Returning the vectorial function of the minimisation problem of Bayes theory 
 def to_minimize_vector(mu_v):
     res=[]
     for mu in mu_v:
@@ -59,11 +64,19 @@ def predict(tendancy, sigma_tendancy_1, sigma_tendancy_2, raw_data, sigma_data_1
 
     res=minimize(to_minimize,np.array([50 for i in range(dim)]))
     print(res.x)
-    plt.plot(range(dim),C)
-    plt.plot(range(k),X)
-    plt.plot(range(24),res.x)
+    plt.title("Resultats graphiques:")
+    plt.plot(range(dim),C,"r",label = "fonction a priori")
+    plt.plot(range(k),X,"b",label = "Données")
+    plt.plot(range(24),res.x,"g--",label = "Resultat")
+    plt.xlabel('Mois (24)')
+    plt.ylabel('coût')
+    plt.legend()
+    plt.show()
+    
+    
+### Ploting the forecast:
 
-
+#parameters:
 dim=24
 
 C=[-(x-(dim//2))**2+(dim//2)**2 for x in range(dim)]
